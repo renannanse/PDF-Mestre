@@ -1,4 +1,4 @@
-Bem-vindo(s) ao PDF Mestre v1.0
+Bem-vindo(s) ao PDF Mestre 
 
 Ano: 2026
 

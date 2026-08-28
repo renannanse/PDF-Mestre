@@ -1,0 +1,637 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Mestre - Suíte Completa de PDF</title>
+    <!-- Bibliotecas -->
+    <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #0d9488;
+            --accent-hover: #0f766e;
+            --bg-page: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-page); color: var(--text-main); line-height: 1.5; min-height: 100vh; display: flex; flex-direction: column; }
+
+        header { background-color: var(--card-bg); border-bottom: 1px solid var(--border-color); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .logo-area { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.25rem; color: var(--primary); cursor: pointer; }
+        .logo-icon { background-color: var(--accent); color: white; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+
+        .nav-links { display: flex; gap: 20px; font-size: 0.95rem; font-weight: 500; color: var(--text-muted); flex-wrap: wrap; }
+        .nav-links span { cursor: pointer; transition: color 0.2s; }
+        .nav-links span:hover { color: var(--accent); }
+
+        .main-container { max-width: 1200px; margin: 0 auto 60px; padding: 0 20px; width: 100%; flex: 1; }
+        .hero { text-align: center; padding: 50px 20px 30px; max-width: 800px; margin: 0 auto; }
+        .hero h1 { font-size: 2.3rem; color: var(--primary); margin-bottom: 10px; font-weight: 800; }
+        .hero p { font-size: 1.05rem; color: var(--text-muted); }
+
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        .tool-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px 20px; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+        .tool-card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 10px 25px -5px rgba(13,148,136,0.08); }
+        .tool-icon { width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 15px; }
+        .tool-card h3 { font-size: 1.1rem; color: var(--primary); margin-bottom: 8px; }
+        .tool-card p { font-size: 0.85rem; color: var(--text-muted); }
+
+        .workspace { display: none; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 35px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-top: 20px; }
+        .workspace-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .workspace-header h2 { color: var(--primary); font-size: 1.4rem; }
+
+        .btn-back { background: none; border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-muted); }
+        .btn-back:hover { background-color: var(--bg-page); color: var(--primary); }
+
+        .upload-dropzone { border: 2px dashed var(--accent); background-color: #f0fdfa; padding: 35px; border-radius: 12px; text-align: center; cursor: pointer; margin-bottom: 20px; }
+        .upload-dropzone p { color: var(--accent); font-weight: 600; margin-top: 8px; }
+
+        .loading-container { display: none; margin: 20px 0; background: var(--bg-page); border: 1px solid var(--border-color); padding: 15px; border-radius: 10px; text-align: center; }
+        .loading-bar-bg { width: 100%; background-color: #e2e8f0; border-radius: 6px; height: 10px; overflow: hidden; margin-top: 8px; }
+        .loading-bar-fill { width: 0%; height: 100%; background-color: var(--accent); transition: width 0.3s ease; border-radius: 6px; }
+        .loading-text { font-size: 0.9rem; font-weight: 600; color: var(--primary); }
+
+        .options-panel { background: var(--bg-page); border: 1px solid var(--border-color); padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .options-panel label { font-size: 0.9rem; font-weight: 600; color: var(--primary); }
+        .options-panel input[type="password"] { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.9rem; }
+
+        .pages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; margin: 20px 0; min-height: 120px; border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; background-color: var(--bg-page); }
+        .page-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between; position: relative; cursor: grab; user-select: none; }
+        .page-card:active { cursor: grabbing; }
+
+        .page-checkbox-container { position: absolute; top: 12px; left: 12px; z-index: 10; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color); }
+        .page-checkbox-container input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+
+        .sortable-ghost { opacity: 0.3; background: var(--accent) !important; border: 2px dashed var(--accent); }
+        .page-card canvas { width: 100% !important; height: auto !important; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 6px; cursor: zoom-in; background: #fff; }
+        .page-info { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .page-actions-row { display: flex; justify-content: space-between; gap: 4px; align-items: center; }
+        .page-actions-row button { padding: 4px 8px; font-size: 0.7rem; border-radius: 4px; cursor: pointer; border: 1px solid var(--border-color); background: #fff; color: var(--text-main); }
+        .page-actions-row button:hover { background: var(--bg-page); border-color: var(--accent); color: var(--accent); }
+        .btn-delete { color: #ef4444 !important; border-color: #fee2e2 !important; background-color: #fef2f2 !important; }
+
+        .btn-primary { background-color: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; width: 100%; transition: background-color 0.2s; box-shadow: 0 4px 6px -1px rgba(13,148,136,0.2); }
+        .btn-primary:hover { background-color: var(--accent-hover); }
+
+        #modal-preview { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: #fff; padding: 20px; border-radius: 12px; max-width: 90%; max-height: 90%; text-align: center; position: relative; display: flex; flex-direction: column; align-items: center; }
+        .modal-content canvas { max-width: 100%; max-height: 75vh; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 15px; }
+        .btn-close-modal { background: var(--primary); color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+        footer { text-align: center; padding: 20px; font-size: 0.85rem; color: var(--text-muted); border-top: 1px solid var(--border-color); background-color: var(--card-bg); margin-top: auto; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area" onclick="voltarHome()">
+            <div class="logo-icon">PDF</div>
+            <span>PDF Mestre</span>
+        </div>
+        <div class="nav-links">
+            <span onclick="voltarHome()">Início</span>
+            <span onclick="abrirFerramenta('juntar')">Juntar</span>
+            <span onclick="abrirFerramenta('dividir')">Dividir</span>
+            <span onclick="abrirFerramenta('img2pdf')">Img para PDF</span>
+            <span onclick="abrirFerramenta('pdf2img')">PDF para Img</span>
+            <span onclick="abrirFerramenta('comprimir')">Comprimir</span>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div id="home-view">
+            <div class="hero">
+                <h1>Suíte Completa de Gestão em PDF</h1>
+                <p>Ferramentas profissionais de edição, conversão, compactação e segurança direto no seu navegador.</p>
+            </div>
+            <div class="tools-grid">
+                <div class="tool-card" onclick="abrirFerramenta('juntar')">
+                    <div class="tool-icon" style="background-color: #e0f2fe; color: #0284c7;">➕</div>
+                    <h3>Juntar PDF</h3>
+                    <p>Mescle vários documentos, reorganize páginas com arrastar e soltar.</p>
+                </div>
+                <div class="tool-card" onclick="abrirFerramenta('dividir')">
+                    <div class="tool-icon" style="background-color: #fef3c7; color: #d97706;">✂️</div>
+                    <h3>Dividir / Extrair</h3>
+                    <p>Selecione páginas específicas por caixinhas e crie um novo PDF.</p>
+                </div>
+                <div class="tool-card" onclick="abrirFerramenta('img2pdf')">
+                    <div class="tool-icon" style="background-color: #dcfce7; color: #16a34a;">🖼️</div>
+                    <h3>Imagem para PDF</h3>
+                    <p>Converta fotos JPG ou PNG em um único arquivo PDF organizado.</p>
+                </div>
+                <div class="tool-card" onclick="abrirFerramenta('pdf2img')">
+                    <div class="tool-icon" style="background-color: #fae8ff; color: #c084fc;">📁</div>
+                    <h3>PDF para Imagem</h3>
+                    <p>Extraia todas as páginas do seu PDF como imagens de alta qualidade.</p>
+                </div>
+                <div class="tool-card" onclick="abrirFerramenta('comprimir')">
+                    <div class="tool-icon" style="background-color: #fee2e2; color: #dc2626;">🗜️</div>
+                    <h3>Comprimir PDF</h3>
+                    <p>Reduza o tamanho do arquivo compactando imagens internas.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. Juntar -->
+        <div id="workspace-juntar" class="workspace">
+            <div class="workspace-header">
+                <h2>Juntar e Organizar PDFs</h2>
+                <button class="btn-back" onclick="voltarHome()">Voltar ao Início</button>
+            </div>
+            <div class="upload-dropzone" onclick="document.getElementById('file-juntar').click()">
+                <div style="font-size: 2rem;">📁</div>
+                <p>Clique para selecionar arquivos PDF</p>
+                <input type="file" id="file-juntar" accept="application/pdf" multiple style="display:none;" onchange="carregarJuntar(this.files)">
+            </div>
+            
+            <div id="loading-juntar" class="loading-container">
+                <div class="loading-text" id="loading-text-juntar">Processando documento...</div>
+                <div class="loading-bar-bg"><div class="loading-bar-fill" id="loading-fill-juntar"></div></div>
+            </div>
+
+            <div class="options-panel">
+                <label>🔒 Proteger com Senha (Opcional):</label>
+                <input type="password" id="senha-juntar" placeholder="Digite uma senha">
+            </div>
+            <div id="grid-juntar" class="pages-grid"><p style="color:var(--text-muted); grid-column:1/-1; text-align:center;">Nenhum arquivo carregado.</p></div>
+            <button id="btn-juntar-ok" class="btn-primary" style="display:none;" onclick="salvarJuntar()">Baixar PDF Mesclado</button>
+        </div>
+
+        <!-- 2. Dividir -->
+        <div id="workspace-dividir" class="workspace">
+            <div class="workspace-header">
+                <h2>Dividir e Extrair Páginas</h2>
+                <button class="btn-back" onclick="voltarHome()">Voltar ao Início</button>
+            </div>
+            <div class="upload-dropzone" onclick="document.getElementById('file-dividir').click()">
+                <div style="font-size: 2rem;">✂️</div>
+                <p>Clique para selecionar o PDF a dividir</p>
+                <input type="file" id="file-dividir" accept="application/pdf" style="display:none;" onchange="carregarDividir(this.files)">
+            </div>
+
+            <div id="loading-dividir" class="loading-container">
+                <div class="loading-text" id="loading-text-dividir">Processando documento...</div>
+                <div class="loading-bar-bg"><div class="loading-bar-fill" id="loading-fill-dividir"></div></div>
+            </div>
+
+            <div id="grid-dividir" class="pages-grid"><p style="color:var(--text-muted); grid-column:1/-1; text-align:center;">Nenhum arquivo carregado.</p></div>
+            <button id="btn-dividir-ok" class="btn-primary" style="display:none;" onclick="salvarDividir()">Baixar Páginas Selecionadas</button>
+        </div>
+
+        <!-- 3. Img para PDF -->
+        <div id="workspace-img2pdf" class="workspace">
+            <div class="workspace-header">
+                <h2>Converter Imagens em PDF</h2>
+                <button class="btn-back" onclick="voltarHome()">Voltar ao Início</button>
+            </div>
+            <div class="upload-dropzone" onclick="document.getElementById('file-img2pdf').click()">
+                <div style="font-size: 2rem;">🖼️</div>
+                <p>Clique para selecionar imagens (JPG, PNG)</p>
+                <input type="file" id="file-img2pdf" accept="image/jpeg,image/png" multiple style="display:none;" onchange="carregarImagens(this.files)">
+            </div>
+            <div id="grid-img2pdf" class="pages-grid"><p style="color:var(--text-muted); grid-column:1/-1; text-align:center;">Nenhuma imagem selecionada.</p></div>
+            <button id="btn-img2pdf-ok" class="btn-primary" style="display:none;" onclick="salvarImg2Pdf()">Gerar PDF de Imagens</button>
+        </div>
+
+        <!-- 4. PDF para Imagem -->
+        <div id="workspace-pdf2img" class="workspace">
+            <div class="workspace-header">
+                <h2>Extrair Páginas como Imagens</h2>
+                <button class="btn-back" onclick="voltarHome()">Voltar ao Início</button>
+            </div>
+            <div class="upload-dropzone" onclick="document.getElementById('file-pdf2img').click()">
+                <div style="font-size: 2rem;">📁</div>
+                <p>Clique para selecionar o PDF</p>
+                <input type="file" id="file-pdf2img" accept="application/pdf" style="display:none;" onchange="carregarPdf2Img(this.files)">
+            </div>
+
+            <div id="loading-pdf2img" class="loading-container">
+                <div class="loading-text" id="loading-text-pdf2img">Processando documento...</div>
+                <div class="loading-bar-bg"><div class="loading-bar-fill" id="loading-fill-pdf2img"></div></div>
+            </div>
+
+            <div id="grid-pdf2img" class="pages-grid"><p style="color:var(--text-muted); grid-column:1/-1; text-align:center;">Nenhum PDF carregado.</p></div>
+            <button id="btn-pdf2img-ok" class="btn-primary" style="display:none;" onclick="salvarPdf2Img()">Baixar Imagens Selecionadas</button>
+        </div>
+
+        <!-- 5. Comprimir -->
+        <div id="workspace-comprimir" class="workspace">
+            <div class="workspace-header">
+                <h2>Comprimir e Reduzir Tamanho do PDF</h2>
+                <button class="btn-back" onclick="voltarHome()">Voltar ao Início</button>
+            </div>
+            <div class="upload-dropzone" onclick="document.getElementById('file-comprimir').click()">
+                <div style="font-size: 2rem;">🗜️</div>
+                <p>Selecione um PDF pesado para compactar</p>
+                <input type="file" id="file-comprimir" accept="application/pdf" style="display:none;" onchange="executarCompressao(this.files)">
+            </div>
+            <div id="compress-status" style="text-align:center; font-weight:600; color:var(--accent); margin-top:15px;"></div>
+        </div>
+    </div>
+
+    <div id="modal-preview" onclick="fecharModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div id="modal-canvas-container"></div>
+            <button class="btn-close-modal" onclick="document.getElementById('modal-preview').style.display='none'">Fechar Zoom</button>
+        </div>
+    </div>
+
+    <footer>&copy; 2026 PDF Mestre. Todos os direitos reservados.</footer>
+
+    <script>
+        let dadosJuntar = [];
+        let dadosDividir = [];
+        let dadosImagens = [];
+        let dadosPdf2Img = [];
+        let sortJuntar = null, sortDividir = null, sortImg = null, sortPdf2Img = null;
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                document.getElementById('modal-preview').style.display = 'none';
+            }
+        });
+
+        function voltarHome() {
+            document.getElementById('home-view').style.display = 'block';
+            ['juntar', 'dividir', 'img2pdf', 'pdf2img', 'comprimir'].forEach(k => {
+                document.getElementById('workspace-' + k).style.display = 'none';
+            });
+        }
+
+        function abrirFerramenta(nome) {
+            document.getElementById('home-view').style.display = 'none';
+            ['juntar', 'dividir', 'img2pdf', 'pdf2img', 'comprimir'].forEach(k => {
+                document.getElementById('workspace-' + k).style.display = (k === nome) ? 'block' : 'none';
+            });
+        }
+
+        function mostrarLoading(tipo, texto, porcentagem) {
+            const container = document.getElementById(`loading-${tipo}`);
+            const textEl = document.getElementById(`loading-text-${tipo}`);
+            const fillEl = document.getElementById(`loading-fill-${tipo}`);
+            if(container) container.style.display = 'block';
+            if(textEl) textEl.innerText = texto;
+            if(fillEl) fillEl.style.width = `${porcentagem}%`;
+        }
+
+        function ocultarLoading(tipo) {
+            const container = document.getElementById(`loading-${tipo}`);
+            if(container) container.style.display = 'none';
+        }
+
+        async function abrirZoom(item) {
+            const modal = document.getElementById('modal-preview');
+            const container = document.getElementById('modal-canvas-container');
+            container.innerHTML = '<p style="padding: 40px; color: var(--text-muted);">Carregando zoom em alta resolução...</p>';
+            modal.style.display = 'flex';
+
+            const zoomCanvas = document.createElement('canvas');
+            const context = zoomCanvas.getContext('2d');
+
+            try {
+                const pdfJs = await pdfjsLib.getDocument({data: item.fileData}).promise;
+                const page = await pdfJs.getPage(item.pageIndex + 1);
+                
+                const viewport = page.getViewport({scale: 1.2});
+                zoomCanvas.width = viewport.width;
+                zoomCanvas.height = viewport.height;
+
+                await page.render({canvasContext: context, viewport: viewport}).promise;
+                
+                container.innerHTML = '';
+                container.appendChild(zoomCanvas);
+            } catch(e) {
+                container.innerHTML = '<p style="color: red;">Erro ao carregar o zoom da página.</p>';
+                console.error(e);
+            }
+        }
+
+        function fecharModal(e) {
+            if(e.target.id === 'modal-preview') document.getElementById('modal-preview').style.display = 'none';
+        }
+
+        // --- 1. JUNTAR ---
+        async function carregarJuntar(files) {
+            if(!files.length) return;
+            const grid = document.getElementById('grid-juntar');
+            grid.innerHTML = '';
+            dadosJuntar = [];
+            
+            mostrarLoading('juntar', 'Lendo arquivos PDF...', 10);
+
+            let totalFiles = files.length;
+            for(let fIdx = 0; fIdx < totalFiles; fIdx++) {
+                const file = files[fIdx];
+                mostrarLoading('juntar', `Processando arquivo ${fIdx + 1} de ${totalFiles} (${file.name})...`, Math.round(((fIdx) / totalFiles) * 80));
+                
+                // Otimização: Carrega o ArrayBuffer apenas uma vez e reutiliza em ambas as bibliotecas
+                const fileData = await file.arrayBuffer();
+                const pdfLib = await PDFLib.PDFDocument.load(fileData);
+                const pdfJs = await pdfjsLib.getDocument({data: fileData}).promise;
+                
+                for(let i=1; i<=pdfJs.numPages; i++) {
+                    dadosJuntar.push({ pdfLib, pageIndex: i-1, rotation: 0, fileName: file.name, fileData });
+                }
+            }
+
+            mostrarLoading('juntar', 'Renderizando miniaturas das páginas...', 90);
+            await renderJuntarGrid();
+            ocultarLoading('juntar');
+            document.getElementById('btn-juntar-ok').style.display = 'block';
+        }
+
+        async function renderJuntarGrid() {
+            const grid = document.getElementById('grid-juntar');
+            grid.innerHTML = '';
+            for(let idx=0; idx<dadosJuntar.length; idx++) {
+                const item = dadosJuntar[idx];
+                const card = document.createElement('div');
+                card.className = 'page-card';
+                card.dataset.origIndex = idx;
+                card.innerHTML = `
+                    <canvas id="cj-${idx}"></canvas>
+                    <div class="page-info">Pág ${item.pageIndex+1}</div>
+                    <div class="page-actions-row">
+                        <button onclick="girarPagina('juntar', ${idx})">🔄 Girar</button>
+                        <button class="btn-delete" onclick="removerItem(this)">Excluir</button>
+                    </div>`;
+                grid.appendChild(card);
+                await desenharCanvasDirect(item, `cj-${idx}`);
+                
+                const canvasEl = document.getElementById(`cj-${idx}`);
+                if(canvasEl) canvasEl.onclick = () => abrirZoom(item);
+            }
+            if(sortJuntar) sortJuntar.destroy();
+            sortJuntar = new Sortable(grid, { animation: 150, ghostClass: 'sortable-ghost' });
+        }
+
+        // --- 2. DIVIDIR ---
+        async function carregarDividir(files) {
+            if(!files.length) return;
+            const file = files[0];
+            const grid = document.getElementById('grid-dividir');
+            grid.innerHTML = '';
+            dadosDividir = [];
+            
+            mostrarLoading('dividir', 'Lendo documento PDF...', 20);
+            // Otimização: Carrega o ArrayBuffer apenas uma vez
+            const fileData = await file.arrayBuffer();
+            const pdfLib = await PDFLib.PDFDocument.load(fileData);
+            
+            mostrarLoading('dividir', 'Analisando páginas...', 50);
+            const pdfJs = await pdfjsLib.getDocument({data: fileData}).promise;
+            for(let i=1; i<=pdfJs.numPages; i++) {
+                dadosDividir.push({ pdfLib, pageIndex: i-1, rotation: 0, fileName: file.name, fileData });
+            }
+
+            mostrarLoading('dividir', 'Renderizando miniaturas...', 80);
+            await renderDividirGrid();
+            ocultarLoading('dividir');
+            document.getElementById('btn-dividir-ok').style.display = 'block';
+        }
+
+        async function renderDividirGrid() {
+            const grid = document.getElementById('grid-dividir');
+            grid.innerHTML = '';
+            for(let idx=0; idx<dadosDividir.length; idx++) {
+                const item = dadosDividir[idx];
+                const card = document.createElement('div');
+                card.className = 'page-card';
+                card.dataset.origIndex = idx;
+                card.innerHTML = `
+                    <div class="page-checkbox-container"><input type="checkbox" class="chk-div" checked></div>
+                    <canvas id="cd-${idx}"></canvas>
+                    <div class="page-info">Pág ${item.pageIndex+1}</div>
+                    <div class="page-actions-row">
+                        <button onclick="girarPagina('dividir', ${idx})">🔄 Girar</button>
+                        <button class="btn-delete" onclick="removerItem(this)">Excluir</button>
+                    </div>`;
+                grid.appendChild(card);
+                await desenharCanvasDirect(item, `cd-${idx}`);
+                
+                const canvasEl = document.getElementById(`cd-${idx}`);
+                if(canvasEl) canvasEl.onclick = () => abrirZoom(item);
+            }
+            if(sortDividir) sortDividir.destroy();
+            sortDividir = new Sortable(grid, { animation: 150, ghostClass: 'sortable-ghost' });
+        }
+
+        async function desenharCanvasDirect(item, canvasId) {
+            try {
+                const pdfJs = await pdfjsLib.getDocument({data: item.fileData}).promise;
+                const page = await pdfJs.getPage(item.pageIndex + 1);
+                const canvas = document.getElementById(canvasId);
+                if(!canvas) return;
+                const context = canvas.getContext('2d');
+                const viewport = page.getViewport({scale: 0.25});
+                canvas.width = viewport.width; 
+                canvas.height = viewport.height;
+                await page.render({canvasContext: context, viewport: viewport}).promise;
+            } catch(e) {
+                console.error("Erro render canvas:", e);
+            }
+        }
+
+        // --- 3. IMAGEM PARA PDF ---
+        async function carregarImagens(files) {
+            if(!files.length) return;
+            dadosImagens = [];
+            for(let file of files) {
+                dadosImagens.push({ url: URL.createObjectURL(file), file });
+            }
+            renderImagensGrid();
+            document.getElementById('btn-img2pdf-ok').style.display = 'block';
+        }
+
+        async function renderImagensGrid() {
+            const grid = document.getElementById('grid-img2pdf');
+            grid.innerHTML = '';
+            dadosImagens.forEach((item, idx) => {
+                const card = document.createElement('div');
+                card.className = 'page-card';
+                card.dataset.origIndex = idx;
+                card.innerHTML = `
+                    <img src="${item.url}" style="width:100%; height:100px; object-fit:contain; border:1px solid var(--border-color); border-radius:4px; margin-bottom:6px;">
+                    <div class="page-info">${item.file.name}</div>
+                    <div class="page-actions-row"><button class="btn-delete" onclick="removerItem(this)">Excluir</button></div>`;
+                grid.appendChild(card);
+            });
+            if(sortImg) sortImg.destroy();
+            sortImg = new Sortable(grid, { animation: 150, ghostClass: 'sortable-ghost' });
+        }
+
+        // --- 4. PDF PARA IMAGEM ---
+        async function carregarPdf2Img(files) {
+            if(!files.length) return;
+            const file = files[0];
+            const grid = document.getElementById('grid-pdf2img');
+            grid.innerHTML = '';
+            dadosPdf2Img = [];
+            
+            mostrarLoading('pdf2img', 'Lendo arquivo PDF...', 20);
+            const buf = await file.arrayBuffer();
+            const pdfJs = await pdfjsLib.getDocument({data: buf}).promise;
+            
+            for(let i=1; i<=pdfJs.numPages; i++) {
+                mostrarLoading('pdf2img', `Renderizando página ${i} de ${pdfJs.numPages}...`, Math.round((i / pdfJs.numPages) * 80));
+                const page = await pdfJs.getPage(i);
+                const viewport = page.getViewport({scale: 0.5});
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width; canvas.height = viewport.height;
+                await page.render({canvasContext: canvas.getContext('2d'), viewport}).promise;
+                dadosPdf2Img.push({ dataUrl: canvas.toDataURL('image/png'), pageNum: i });
+            }
+            renderPdf2ImgGrid();
+            ocultarLoading('pdf2img');
+            document.getElementById('btn-pdf2img-ok').style.display = 'block';
+        }
+
+        function renderPdf2ImgGrid() {
+            const grid = document.getElementById('grid-pdf2img');
+            grid.innerHTML = '';
+            dadosPdf2Img.forEach((item, idx) => {
+                const card = document.createElement('div');
+                card.className = 'page-card';
+                card.dataset.origIndex = idx;
+                card.innerHTML = `
+                    <div class="page-checkbox-container"><input type="checkbox" class="chk-p2i" checked></div>
+                    <img src="${item.dataUrl}" style="width:100%; height:100px; object-fit:contain; border:1px solid var(--border-color); border-radius:4px; margin-bottom:6px;">
+                    <div class="page-info">Pág ${item.pageNum}</div>`;
+                grid.appendChild(card);
+            });
+            if(sortPdf2Img) sortPdf2Img.destroy();
+            sortPdf2Img = new Sortable(grid, { animation: 150, ghostClass: 'sortable-ghost' });
+        }
+
+        function girarPagina(tipo, idx) {
+            const arr = (tipo === 'juntar') ? dadosJuntar : dadosDividir;
+            arr[idx].rotation = (arr[idx].rotation + 90) % 360;
+            const canvas = document.getElementById(tipo === 'juntar' ? `cj-${idx}` : `cd-${idx}`);
+            if(canvas) {
+                canvas.style.transform = `rotate(${arr[idx].rotation}deg)`;
+                canvas.style.transition = 'transform 0.2s ease';
+            }
+        }
+
+        function removerItem(btnEl) {
+            const card = btnEl.closest('.page-card');
+            card.style.transform = 'scale(0.8)';
+            card.style.opacity = '0';
+            setTimeout(() => card.remove(), 200);
+        }
+
+        // --- SALVAMENTO ORDENADO ---
+        async function salvarJuntar() {
+            const grid = document.getElementById('grid-juntar');
+            const cards = grid.querySelectorAll('.page-card');
+            if(!cards.length) return;
+            
+            const novoPdf = await PDFLib.PDFDocument.create();
+            for(let card of cards) {
+                const origIdx = parseInt(card.dataset.origIndex);
+                const item = dadosJuntar[origIdx];
+                if(item) {
+                    const [pag] = await novoPdf.copyPages(item.pdfLib, [item.pageIndex]);
+                    pag.setRotation(PDFLib.degrees(item.rotation));
+                    novoPdf.addPage(pag);
+                }
+            }
+            baixar(await novoPdf.save(), 'pdfmaster-unido.pdf');
+        }
+
+        async function salvarDividir() {
+            const grid = document.getElementById('grid-dividir');
+            const cards = grid.querySelectorAll('.page-card');
+            const novoPdf = await PDFLib.PDFDocument.create();
+            let count = 0;
+
+            cards.forEach(card => {
+                const chk = card.querySelector('.chk-div');
+                if(chk && chk.checked) count++;
+            });
+            if(!count) { alert('Selecione ao menos uma página.'); return; }
+
+            for(let card of cards) {
+                const chk = card.querySelector('.chk-div');
+                if(chk && chk.checked) {
+                    const origIdx = parseInt(card.dataset.origIndex);
+                    const item = dadosDividir[origIdx];
+                    if(item) {
+                        const [pag] = await novoPdf.copyPages(item.pdfLib, [item.pageIndex]);
+                        pag.setRotation(PDFLib.degrees(item.rotation));
+                        novoPdf.addPage(pag);
+                    }
+                }
+            }
+            baixar(await novoPdf.save(), 'pdfmaster-dividido.pdf');
+        }
+
+        async function salvarImg2Pdf() {
+            const grid = document.getElementById('grid-img2pdf');
+            const cards = grid.querySelectorAll('.page-card');
+            if(!cards.length) return;
+            
+            const pdfDoc = await PDFLib.PDFDocument.create();
+            for(let card of cards) {
+                const origIdx = parseInt(card.dataset.origIndex);
+                const item = dadosImagens[origIdx];
+                if(item) {
+                    const bytes = await item.file.arrayBuffer();
+                    let img = (item.file.type === 'image/png') ? await pdfDoc.embedPng(bytes) : await pdfDoc.embedJpg(bytes);
+                    const page = pdfDoc.addPage([img.width, img.height]);
+                    page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+                }
+            }
+            baixar(await pdfDoc.save(), 'pdfmaster-imagens.pdf');
+        }
+
+        function salvarPdf2Img() {
+            const grid = document.getElementById('grid-pdf2img');
+            const cards = grid.querySelectorAll('.page-card');
+            cards.forEach(card => {
+                const chk = card.querySelector('.chk-p2i');
+                const origIdx = parseInt(card.dataset.origIndex);
+                if(chk && chk.checked && dadosPdf2Img[origIdx]) {
+                    const link = document.createElement('a');
+                    link.href = dadosPdf2Img[origIdx].dataUrl;
+                    link.download = `pagina-${dadosPdf2Img[origIdx].pageNum}.png`;
+                    link.click();
+                }
+            });
+        }
+
+        async function executarCompressao(files) {
+            if(!files.length) return;
+            const status = document.getElementById('compress-status');
+            status.innerText = 'Compactando arquivo PDF...';
+            const file = files[0];
+            const buf = await file.arrayBuffer();
+            const pdfDoc = await PDFLib.PDFDocument.load(buf);
+            const compressedBytes = await pdfDoc.save({ useObjectStreams: true });
+            status.innerText = `Concluído! Original: ${(file.size/1024).toFixed(1)} KB | Compactado: ${(compressedBytes.length/1024).toFixed(1)} KB`;
+            baixar(compressedBytes, 'pdfmaster-compactado.pdf');
+        }
+
+        function baixar(bytes, filename) {
+            const blob = new Blob([bytes], { type: 'application/pdf' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+    </script>
+</body>
+</html>
